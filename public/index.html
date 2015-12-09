@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- To know more about my favourite topics visit my blog http://minhaj.io -->
+<html ng-app="mulkiyaOCR">
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>OCR - APP</title>
+    <link rel="shortcut icon" href="images/camera.png" type="image/x-icon">
+    <link rel="icon" href="images/camera.png" type="image/x-icon">
+
+    <!-- Meta tags -->
+    <meta name="keywords" content="ocr, optical character recognition"/>
+    <meta name="description" content="Optical character recognition prototype for extracting text from car registration card."/>
+    <meta name="language" content="EN">
+    <meta name="robots" content="index,follow" />
+    <meta name="summary" content="Optical character recognition prototype for extracting text from car registration card.">
+    <meta name="revisit-after" content="7 days">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="OCR - APP">
+    <meta name="twitter:site" content="https://mulkiya-ocr.herokuapp.com/">
+    <meta name="twitter:creator" content="@minhajkk">
+    <meta name="twitter:card" content="images/camera.png">
+    <meta name="twitter:image" content="images/camera.png">
+
+    <!-- Open Graph -->
+    <meta name="og:title" content="Optical character recognition application"/>
+    <meta name="og:url" content="https://mulkiya-ocr.herokuapp.com/"/>
+    <meta name="og:image" content="images/camera.png"/>
+    <meta name="og:site_name" content="mulkiya-ocr"/>
+    <meta name="og:description" content="Optical character recognition prototype for extracting text from car registration card."/>
+    <meta name="og:locality" content="Dubai"/>
+    <meta name="og:region" content="dxb"/>
+    <meta name="og:country-name" content="UAE"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:locale" content="en_US">
+
+    <!-- Style Sheets -->
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.min.css">
+    <link rel="stylesheet" href="css/styles.css"/>
+</head>
+
+<body ng-controller="ApplicationController">
+
+<!-- Bower Components -->
+<script src="bower_components/angular/angular.min.js"></script>
+<script src="bower_components/ui-router/release/angular-ui-router.min.js"></script>
+<script src="bower_components/angular-animate/angular-animate.min.js"></script>
+<script src="bower_components/angular-aria/angular-aria.min.js"></script>
+<script src="bower_components/angular-material/angular-material.min.js"></script>
+<script src="bower_components/ng-file-upload/ng-file-upload.min.js"></script>
+
+
+<!-- Application JS -->
+<script src="scripts/app.js"></script>
+
+<div layout="column" layout-align="center start">
+    <div layout-fill>
+        <md-toolbar class="md-primary md-hue-2" layout-padding>
+            <div layout="row">
+                <h1 class="md-toolbar-tools">
+                    <span class="md-display-1">
+                        Mulkiya Text Scanner
+                    </span>
+                </h1>
+                <div ng-show="progress">
+                    <md-progress-circular class="md-warn" md-mode="indeterminate"></md-progress-circular>
+                </div>
+            </div>
+        </md-toolbar>
+    </div>
+    <div layout-align="center start" layout-fill>
+        <div layout-wrap layout="column" layout-align="center center">
+            <div ng-show="files[0]">
+                <md-button data-ng-disabled="(files[0]) && (progress === true)" class="md-fab" ng-click="uploadMulkiya($event)" style="width: 100px; height: 100px">
+                    <md-icon md-svg-icon="images/photo.svg" style="width:60px;height:60px;"></md-icon>
+                    <md-tooltip md-direction="right" md-delay="100" md-autohide="true">
+                        Scan Mulkiya
+                    </md-tooltip>
+                </md-button>
+            </div>
+            <div style="height: 400px;" layout-margin >
+                <md-whiteframe class="md-whiteframe-z5" layout="row" layout-align="center center" layout-fill
+                               ngf-drop ngf-max-size='4000000' ngf-allow-dir="true" ngf-select="true" ngf-capture="capture"
+                               ng-model="files" ngf-drag-over-class="upload-bg-color" ngf-multiple="false" accept="image/*">
+                        <md-card ng-show="files[0]">
+                            <md-progress-linear ng-show="progress" md-mode="indeterminate"></md-progress-linear>
+                            <img ngf-src="files[0]" ngf-accept="'image/*'">
+                        </md-card>
+                    <div ng-hide="files[0]" class="md-display-1" layout-margin layout-padding>
+                        Select Your Mulkiya or Drop Here!
+                    </div>
+                </md-whiteframe>
+            </div>
+        </div>
+    </div>
+    <div layout-fill layout-margin layout-padding>
+        <div layout="row" layout-align="center end">
+            <!--© 2015 Minhaj Mehmood.-->
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
