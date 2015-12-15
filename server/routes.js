@@ -16,7 +16,7 @@ module.exports = function(app) {
     ));
 
     app.post("/api/ocr", process);
-    app.post("/api/digits", process);
+    app.post("/api/digits", digits);
 
 };
 
@@ -38,23 +38,20 @@ module.exports = function(app) {
 
     var image = req.files.image.path;
 
-    // Recognize text of any language in any format
-    tesseract.process(image,function(err, text) {
-        if(err) {
-            console.error(err);
-        } else {
-            // fs.unlink(image, function (err) {
-            //     if (err){
-            //         res.json(500, "Error while scanning image");
-            //     }
-            //     console.log('successfully deleted %s', image);
-            // });
+    preprocessImage(image,function(err, preprocessedImage) {
+        if(!err) {
+            
+            console.log('\nImage preprocessed! '+preprocessedImage);
+            
+            performOCR(preprocessedImage, function(err, text) {
 
-          
-            console.log('recognized %s',text);
-
-            res.json(200, text);
-        }
+                if (!err) {
+                    res.json(200, text);
+                } else {
+                    res.json(500, "Error while scanning image");
+                }
+            });
+        } 
     });
 };
 
