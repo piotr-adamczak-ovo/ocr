@@ -88,7 +88,7 @@
                                ng-model="files" ngf-drag-over-class="upload-bg-color" ngf-multiple="false" accept="image/*">
                         <md-card ng-show="files[0]">
                             <md-progress-linear ng-show="progress" md-mode="indeterminate"></md-progress-linear>
-                            <img ngf-src="files[0]" ngf-accept="'image/*'">
+                            <img id="preview" ngf-src="files[0]" ngf-accept="'image/*'">
                         </md-card>
                     <div ng-hide="files[0]" class="md-display-1" layout-margin layout-padding>
                         Select Your Mulkiya or Drop Here!

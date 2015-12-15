@@ -1,5 +1,5 @@
 {
-  "name": "mulkiya-ocr",
+  "name": "ovo-ocr",
   "version": "1.0.0",
   "author": "Minhaj",
   "license": "MIT",
@@ -8,7 +8,7 @@
   "main": "server/app.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/minhajkk/mulkiya-ocr.git"
+    "url": "https://github.com/piotr-adamczak-ovo/ocr.git"
   },
   "scripts": {
     "start": "node server/app.js",

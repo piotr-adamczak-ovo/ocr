@@ -1,9 +1,6 @@
 {
-  "name": "mulkiya-ocr",
+  "name": "ovo-ocr",
   "version": "1.0.0",
-  "authors": [
-    "Minhaj Mehmood <minhaj.kk@gmail.com>"
-  ],
   "directory": "public/bower_components",
   "license": "MIT",
   "private": false,

@@ -3,9 +3,9 @@
  */
 
 var tesseract = require('node-tesseract');
+var textcleaner = require('textcleaner');
 var multer  = require('multer');
 var fs = require('fs');
-
 
 module.exports = function(app) {
     app.use(multer(
@@ -16,7 +16,7 @@ module.exports = function(app) {
     ));
 
     app.post("/api/ocr", process);
-    app.post("/api/digits", digits);
+    app.post("/api/digits", process);
 
 };
 
@@ -50,10 +50,6 @@ module.exports = function(app) {
             //     console.log('successfully deleted %s', image);
             // });
 
-            text = text.replace(/\n/g, '');
-            text = text.replace(/ /g,'')
-            text = text.replace(/\./g,'')
-            text = text.replace('"', '');
           
             console.log('recognized %s',text);
 
@@ -66,19 +62,54 @@ var process = function(req, res) {
 
     var path = req.files.file.path;
 
+    preprocessImage(path,function(err, preprocessedImage) {
+        if(!err) {
+            
+            console.log('\nImage preprocessed! '+preprocessedImage);
+            
+            performOCR(preprocessedImage, function(err, text) {
+
+                if (!err) {
+                    res.json(200, text);
+                } else {
+                    res.json(500, "Error while scanning image");
+                }
+            });
+        } 
+    });
+};
+
+function preprocessImage(path, callback) {
+    textcleaner.process(path,function(err, preprocessedImage) {
+        if(err) {
+            console.error(err);
+            callback(err,null);
+        } else {
+            callback(null,preprocessedImage);
+        }
+    });
+}
+
+function performOCR(path, callback) {
+
     // Recognize text of any language in any format
     tesseract.process(path,function(err, text) {
         if(err) {
             console.error(err);
         } else {
-            fs.unlink(path, function (err) {
-                if (err){
-                    res.json(500, "Error while scanning image");
-                }
-                console.log('successfully deleted %s', path);
-            });
+            // fs.unlink(path, function (err) {
+            //     if (err){
+            //         callback(err,null)
+            //     }
+            //     console.log('successfully deleted %s', path);
+            // });
 
-            res.json(200, text);
+            text = text.replace(/\n/g, '');
+            text = text.replace(/ /g,'')
+            text = text.replace(/\./g,'')
+            text = text.replace('"', '');
+        
+            callback(null, text);
         }
     });
-};
+}
