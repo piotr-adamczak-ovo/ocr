@@ -2,48 +2,11 @@
  * Created by Minhaj on 6/20/15.
  */
 
+var utils = require('utils');
 var tesseract = require('node-tesseract');
 var textcleaner = require('textcleaner');
 var multer  = require('multer');
 var fs = require('fs');
-
-
-/**
- * Sync file copying
- */
- function copyFileSync(srcFile, destFile) {
-    var BUF_LENGTH, buff, bytesRead, fdr, fdw, pos;
-    BUF_LENGTH = 64 * 1024;
-    buff = new Buffer(BUF_LENGTH);
-    fdr = fs.openSync(srcFile, 'r');
-    fdw = fs.openSync(destFile, 'w');
-    bytesRead = 1;
-    pos = 0;
-    while (bytesRead > 0) {
-        bytesRead = fs.readSync(fdr, buff, 0, BUF_LENGTH, pos);
-        fs.writeSync(fdw, buff, 0, bytesRead);
-        pos += bytesRead;
-    }
-    fs.closeSync(fdr);
-    return fs.closeSync(fdw);
-};
-
-
-function datetimestamp() {
-    var today = new Date();
-    var sToday = today.getDate().toString();
-    sToday += '-';
-    sToday += (today.getMonth()+1).toString();
-    sToday += '-';
-    sToday += today.getFullYear().toString();
-    sToday += '_';
-    sToday += today.getHours().toString();
-    sToday += '-';
-    sToday += today.getMinutes().toString();
-    sToday += '-';
-    sToday += today.getSeconds().toString();
-    return sToday;
-}
 
 module.exports = function(app) {
     app.use(multer(
@@ -72,21 +35,36 @@ module.exports = function(app) {
 
  var digits = function(req, res) {
 
-    console.log('connection : %j', req.files.image.path);
+    console.log('Start processing: %j', req.files.image.path);
 
+    var crop = req.body.crop;
+
+    if (!crop) {
+        console.err("Please put 'crop' parameter into POST request");
+        return;
+    }
+
+    var cropRect = new utils.Rect(crop);  
     var image = req.files.image.path;
 
-    preprocessImage(image,function(err, preprocessedImage) {
+    //create copy of original image
+    preprocessImage(image,cropRect,function(err, preprocessedImage) {
         if(!err) {
             
-            console.log('\nImage preprocessed! '+preprocessedImage);
+            console.log('\nImage preprocessed! \n'+preprocessedImage+'\n');
             
             performOCR(preprocessedImage, function(err, text) {
 
                 if (!err) {
                     res.json(200, text);
-                    copyFileSync(image, __dirname + '/../uploads/'+datetimestamp()+'--'+text+'.jpg');
+                    utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+text+'.jpg');
  
+                    fs.unlink(image, function (err) {
+                        if (err){
+                            callback(err,null)
+                        }
+                    });
+
                 } else {
                     res.json(500, "Error while scanning image");
                 }
@@ -99,7 +77,7 @@ var process = function(req, res) {
 
     var path = req.files.file.path;
 
-    preprocessImage(path,function(err, preprocessedImage) {
+    preprocessImage(path,null,function(err, preprocessedImage) {
         if(!err) {
             
             console.log('\nImage preprocessed! '+preprocessedImage);
@@ -116,8 +94,8 @@ var process = function(req, res) {
     });
 };
 
-function preprocessImage(path, callback) {
-    textcleaner.process(path,function(err, preprocessedImage) {
+function preprocessImage(path, cropRect, callback) {
+    textcleaner.process(path, cropRect ,function(err, preprocessedImage) {
         if(err) {
             console.error(err);
             callback(err,null);
@@ -134,18 +112,13 @@ function performOCR(path, callback) {
         if(err) {
             console.error(err);
         } else {
-            // fs.unlink(path, function (err) {
-            //     if (err){
-            //         callback(err,null)
-            //     }
-            //     console.log('successfully deleted %s', path);
-            // });
-
+        
             text = text.replace(/\n/g, '');
             text = text.replace(/ /g,'')
             text = text.replace(/\./g,'')
             text = text.replace('"', '');
-        
+            text = text.replace(/-/g, '');
+    
             callback(null, text);
         }
     });
