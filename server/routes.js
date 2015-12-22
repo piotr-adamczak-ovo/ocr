@@ -7,6 +7,7 @@ var tesseract = require('node-tesseract');
 var textcleaner = require('textcleaner');
 var multer  = require('multer');
 var fs = require('fs');
+var hocr = require('node-hocr');
 
 module.exports = function(app) {
     app.use(multer(
@@ -35,9 +36,9 @@ module.exports = function(app) {
 
  var benchmark = function(req, res) {
 
-    var expect = 019676;
+    var expect = 9373;
 
-    var image = __dirname + '/../test/test_3.jpg';
+    var image = __dirname + '/../test/test_5.jpg';
 
     //best for dark 04944 : 
     // b_0.6_c_-0.1_p_4  49445774
@@ -58,9 +59,9 @@ module.exports = function(app) {
         for (var b=-30;b<=90;b+=10) {
             for (var c=0; c<=100;c+=10) {
 
-            preprocessImageWithParams(image, b/100, c/100,p,function(err, preprocessedImage, br, co, po) {
+            preprocessImageWithParams(image, b/100, c/100,p,function(err, isLcd, preprocessedImage, br, co, po) {
                 if(!err) {
-                        performOCR(preprocessedImage, function(err, text) {
+                        performOCR(preprocessedImage, isLcd, function(err, text) {
                             if (parseInt(text) != expect) {
                                 utils.copyFileSync(preprocessedImage, __dirname + '/../uploads/meter_photo_b_'+br+'_c_'+co+'_p_'+po+'_'+text+'.jpg');
                             } else {
@@ -96,25 +97,71 @@ module.exports = function(app) {
     var image = req.files.image.path;
 
     //create copy of original image
-    preprocessImage(image,cropRect,function(err, preprocessedImage) {
-        if(!err) {
-            
-            console.log('\nImage preprocessed! \n'+preprocessedImage+'\n');
-            
-            performOCR(preprocessedImage, function(err, text) {
+    preprocessImage(image,cropRect,function(preprocessedImages) {
+        
+        if (preprocessedImages == null) {
+            res.json(200, "");     
+        }
 
-                if (!err) {
-                    res.json(200, text);
-                    utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+text+'.jpg');
- 
-                    fs.unlink(image, function (err) {
-                        if (err){
-                            callback(err,null)
+        console.log('\nImage preprocessed: '+preprocessedImages.length+'\n');
+        
+        var hocrs = [];
+        var results = [];
+        var ocrDone = 0;
+
+        for (var index = 0; index < preprocessedImages.length; index++) {
+
+            var stepImage = preprocessedImages[index];
+
+            performOCR(stepImage.path, stepImage.isLcd, function(err, text) {
+
+                ocrDone++;
+
+                if (text != null) {
+                    hocrs.push(text);
+                }    
+
+                if (ocrDone == preprocessedImages.length) {
+
+                    parseNextHocr(hocrs,0, results, function(endResults) {
+                        
+                        var winner = new utils.MeterRead("",0);
+
+                        if (endResults != null) { 
+                            console.log("\nCandidates:");
+                            endResults.forEach(logArrayElements);
+
+                            var maxConfidence = Math.max.apply(Math,endResults.map(function(o){ 
+                                if (o == null) return 0;
+                                return o.confidence; 
+                            }));
+
+                            var winners = endResults.filter(function (o) {
+
+                                if (o == null) {
+                                    return false;
+                                }
+
+                                return o.confidence == maxConfidence;
+                            });
+
+                            console.log("\nWinners:");
+                            console.log(winners);
+
+                            winner = winners[0];
                         }
+
+                        utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg');
+                        res.json(200, meterReadToJson(winner));
+                              
+                        fs.unlink(image, function (err) {
+                            if (err){
+                                callback(err,null)
+                            }
+                        });
                     });
 
-                } else {
-                    res.json(500, "Error while scanning image");
+
                 }
             });
         } 
@@ -123,62 +170,161 @@ module.exports = function(app) {
 
 var process = function(req, res) {
 
-    var path = req.files.file.path;
+    var image = req.files.file.path;
 
-    preprocessImage(path,null,function(err, preprocessedImage) {
-        if(!err) {
-            
-            console.log('\nImage preprocessed! '+preprocessedImage);
-            
-            performOCR(preprocessedImage, function(err, text) {
+   //create copy of original image
+    preprocessImage(image,null,function(preprocessedImages) {
+        
+        console.log('\nImage preprocessed: '+preprocessedImages.length+'\n');
+        
+        var results = [];
+        var ocrDone = 0;
 
-                if (!err) {
-                    res.json(200, text);
-                } else {
-                    res.json(500, "Error while scanning image");
+        for (var index = 0; index < preprocessedImages.length; index++) {
+
+            var stepImage = preprocessedImages[index];
+
+            performOCR(stepImage.path, stepImage.isLcd, function(err, text) {
+
+                ocrDone++;
+
+                if (text != null) {
+                    results.push(text);
+                }    
+
+                if (ocrDone == preprocessedImages.length) {
+
+                    var fullOcrResults = results.join("\n\n\n");
+                    console.log(fullOcrResults);
+
+
+                    fullOcrResults = "";
+                    utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+''+'.jpg');
+                    res.json(200, fullOcrResults);
+                          
+                    fs.unlink(image, function (err) {
+                        if (err){
+                            callback(err,null)
+                        }
+                    });
                 }
             });
-        } 
+        }
     });
 };
 
 function preprocessImage(path, cropRect, callback) {
-    textcleaner.process(path, cropRect ,function(err, preprocessedImage) {
-        if(err) {
-            console.error(err);
-            callback(err,null);
-        } else {
-            callback(null,preprocessedImage);
-        }
+    textcleaner.process(path, cropRect,function(preprocessedImages) {
+        callback(preprocessedImages);
     });
 }
 
 function preprocessImageWithParams(path, b, c,p, callback) {
-    textcleaner.benchmark(path, b, c, p,function(err, preprocessedImage) {
+    textcleaner.benchmark(path, b, c, p,function(err, isLcd, preprocessedImage) {
         if(err) {
             console.error(err);
-            callback(err,null, b, c, p);
+            callback(err,isLcd,null, b, c, p);
         } else {
-            callback(null,preprocessedImage, b, c,p);
+            callback(null,isLcd, preprocessedImage, b, c,p);
         }
     });
 }
 
+function meterReadFromData(data) {
 
-function performOCR(path, callback) {
+    if (data.length == 0) return null;
+    if (data[0].par.length == 0) return null;
+    if (data[0].par[0].line.length == 0) return null;
+    if (data[0].par[0].line[0].words.length == 0) return null;
+
+    var words = data[0].par[0].line[0].words;
+    console.log(words);
+
+    var totalConfidence = 0;
+    var totalCounter = 0;
+    var fullWord = "";
+
+    for (var index=0; index <words.length; index++) {
+
+            var word = words[index];
+            var singleWord = word.data;
+            if (singleWord != null) {
+                singleWord = singleWord.replace(/\n/g, '');
+                singleWord = singleWord.replace(/ /g,'')
+                singleWord = singleWord.replace(/\./g,'')
+                singleWord = singleWord.replace('"', '');
+                singleWord = singleWord.replace(/-/g, '');
+            }
+
+            if (singleWord != null) {
+                fullWord = fullWord + singleWord;
+            }
+
+            if (word != null) {
+                var params = word.infos.split("x_wconf");
+                var confidence = params[1];
+                confidence = confidence.replace(/ /g,'');
+                totalConfidence += parseInt(confidence);
+                totalCounter++;
+            }
+    }
+    
+    if (totalCounter > 0) {
+        totalConfidence = totalConfidence / totalCounter;
+    }
+ 
+    var meterRead = new utils.MeterRead(fullWord,totalConfidence);
+    return meterRead;
+}
+
+function meterReadToJson(meterRead) {
+    var meterJson = "{\"meter_read\":\""+ meterRead.word + "\", \"confidence\":"+meterRead.confidence+"}";
+    return meterJson;
+}
+
+function parseNextHocr(hocrs, index, results, callback) {
+
+        if (index >= hocrs.length) {
+            callback(results);
+            return;
+        }
+
+        console.log("Current step of parsing: "+index);
+
+        parseHocr(hocrs[index],function(err,image) {
+
+            if (err == null) {
+                results.push(image);
+            }
+
+            parseNextHocr(hocrs, index+1, results,callback);
+        });
+ }
+
+ function parseHocr(hocr_value, callback) {
+
+   var hocr2 = new hocr.Hocr(hocr_value, function(error, data) {
+        if (error) {
+          callback(error, null);
+        } else {
+          var meterRead = meterReadFromData(data);
+          callback(null, meterRead);
+        }
+   });
+}
+
+function logArrayElements(element, index, array) {
+    if (element == null) return;
+    console.log('"'+element.word+'" = ' + element.confidence + '%');
+}
+
+function performOCR(path, isLcd, callback) {
 
     // Recognize text of any language in any format
-    tesseract.process(path,function(err, text) {
+    tesseract.process(path,isLcd,function(err, text) {
         if(err) {
             console.error(err);
         } else {
-        
-            text = text.replace(/\n/g, '');
-            text = text.replace(/ /g,'')
-            text = text.replace(/\./g,'')
-            text = text.replace('"', '');
-            text = text.replace(/-/g, '');
-    
             callback(null, text);
         }
     });

@@ -10,6 +10,11 @@
     this.width = parseInt(json.width);
     this.height= parseInt(json.height);
   }
+
+  function ImageForOCR(path, isLcd) {
+    this.path = path;
+    this.isLcd = isLcd;
+  }
 /**
  * Sync file copying
  */
