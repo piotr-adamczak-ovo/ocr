@@ -95,7 +95,16 @@ module.exports = function(app) {
 
     var cropRect = new utils.Rect(crop);  
     var image = req.files.image.path;
+    performOcrForImage(image,cropRect,req,res);
+};
 
+var process = function(req, res) {
+    var image = req.files.file.path;
+    performOcrForImage(image, null, req, res);
+};
+
+function performOcrForImage(image, cropRect, req,res ) {
+ 
     //create copy of original image
     preprocessImage(image,cropRect,function(preprocessedImages) {
         
@@ -166,52 +175,7 @@ module.exports = function(app) {
             });
         } 
     });
-};
-
-var process = function(req, res) {
-
-    var image = req.files.file.path;
-
-   //create copy of original image
-    preprocessImage(image,null,function(preprocessedImages) {
-        
-        console.log('\nImage preprocessed: '+preprocessedImages.length+'\n');
-        
-        var results = [];
-        var ocrDone = 0;
-
-        for (var index = 0; index < preprocessedImages.length; index++) {
-
-            var stepImage = preprocessedImages[index];
-
-            performOCR(stepImage.path, stepImage.isLcd, function(err, text) {
-
-                ocrDone++;
-
-                if (text != null) {
-                    results.push(text);
-                }    
-
-                if (ocrDone == preprocessedImages.length) {
-
-                    var fullOcrResults = results.join("\n\n\n");
-                    console.log(fullOcrResults);
-
-
-                    fullOcrResults = "";
-                    utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+''+'.jpg');
-                    res.json(200, fullOcrResults);
-                          
-                    fs.unlink(image, function (err) {
-                        if (err){
-                            callback(err,null)
-                        }
-                    });
-                }
-            });
-        }
-    });
-};
+}
 
 function preprocessImage(path, cropRect, callback) {
     textcleaner.process(path, cropRect,function(preprocessedImages) {
