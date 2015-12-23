@@ -278,8 +278,7 @@ function meterReadFromData(data) {
 }
 
 function meterReadToJson(meterRead) {
-    var meterJson = "{\"meter_read\":\""+ meterRead.word + "\", \"confidence\":"+meterRead.confidence+"}";
-    return meterJson;
+    return {"meter_read": meterRead.word, "confidence": meterRead.confidence.toFixed(2)};
 }
 
 function parseNextHocr(hocrs, index, results, callback) {

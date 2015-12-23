@@ -1,9 +1,9 @@
 {
   "name": "ovo-ocr",
   "version": "1.0.0",
-  "author": "Minhaj",
+  "author": "Peter",
   "license": "MIT",
-  "description": "Optical character recognition app",
+  "description": "Photo meter recognizer",
   "private": false,
   "main": "server/app.js",
   "repository": {
@@ -17,8 +17,7 @@
   "dependencies": {
     "bower": "^1.4.1",
     "express": "~3.4.6",
-    "multer": "^0.1.8",
-    "node-tesseract": "^0.2.7"
+    "multer": "^0.1.8"
   },
   "engines": {
     "node": "~0.10.33"
