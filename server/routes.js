@@ -134,7 +134,7 @@ function performOcrForImage(image, cropRect, req,res ) {
 
                     parseNextHocr(hocrs,0, results, function(endResults) {
                         
-                        var winner = new utils.MeterRead("",0);
+                        var winner;
 
                         if (endResults != null) { 
                             console.log("\nCandidates:");
@@ -158,6 +158,10 @@ function performOcrForImage(image, cropRect, req,res ) {
                             console.log(winners);
 
                             winner = winners[0];
+                        }
+
+                        if (winner == null) {
+                            winner = new utils.MeterRead("",0);
                         }
 
                         utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg');
