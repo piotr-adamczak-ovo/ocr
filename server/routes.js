@@ -20,7 +20,19 @@ module.exports = function(app) {
     app.post("/api/ocr", process);
     app.post("/api/digits", digits);
     app.get("/api/benchmark", benchmark);
+    app.get("/server_check", server_check);
 };
+
+var server_check = function(req,res) {
+
+    tesseract.version(function(err, data) {
+        if (!err) {
+            res.json(200, data); 
+        } else {
+            res.json(500, err);
+        }
+    });
+}
 
 /**
  * Following steps done under this functions.
