@@ -19,7 +19,7 @@ app.use(function(req, res, next){
 
 require('./routes')(app);
 
-var runningPortNumber = process.env.PORT || 3000;
+var runningPortNumber = process.env.PORT || 8080;
 
 var server = app.listen(runningPortNumber, function () {
 
