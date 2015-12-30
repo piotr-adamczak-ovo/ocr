@@ -6,8 +6,10 @@ var utils = require('utils');
 var tesseract = require('node-tesseract');
 var textcleaner = require('textcleaner');
 var multer  = require('multer');
+var express  = require('express');
 var fs = require('fs');
 var hocr = require('node-hocr');
+var serveIndex = require('serve-index');
 
 module.exports = function(app) {
     app.use(multer(
@@ -17,10 +19,12 @@ module.exports = function(app) {
         }
     ));
 
+    app.use("/images",serveIndex('uploads', {'icons': true}));
     app.post("/api/ocr", process);
     app.post("/api/digits", digits);
     app.get("/api/benchmark", benchmark);
     app.get("/server_check", server_check);
+   
 };
 
 var server_check = function(req,res) {
