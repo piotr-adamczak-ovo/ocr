@@ -2,10 +2,12 @@
  * Created by Minhaj on 6/20/15.
  */
 
-
+var serveIndex = require('serve-index');
 var express = require('express')
     ,app = express();
 
+app.use("/images", express.static(__dirname + '/../uploads'));
+app.use("/images",serveIndex(__dirname + '/../uploads', {'icons': true}));
 app.use(express.static('public'));
 
 // logs every request
@@ -17,7 +19,9 @@ app.use(function(req, res, next){
     next();
 });
 
+ 
 require('./routes')(app);
+
 
 var runningPortNumber = process.env.PORT || 8080;
 
