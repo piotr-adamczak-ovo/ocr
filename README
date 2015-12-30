@@ -1,1 +1,4 @@
 OCR meter read recognizer with Tesseract
+
+heroku buildpacks:set heroku/nodejs
+heroku buildpacks:add https://github.com/matteotiziano/heroku-buildpack-tesseract
