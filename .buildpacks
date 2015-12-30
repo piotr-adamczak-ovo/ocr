@@ -1,3 +1,2 @@
 https://github.com/heroku/heroku-buildpack-nodejs
-https://github.com/ddollar/heroku-buildpack-apt
-https://github.com/Papiel/heroku-buildpack-tesseract
+https://github.com/matteotiziano/heroku-buildpack-tesseract
