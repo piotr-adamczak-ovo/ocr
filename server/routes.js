@@ -24,7 +24,7 @@ module.exports = function(app) {
     app.post("/api/digits", digits);
     app.get("/api/benchmark", benchmark);
     app.get("/server_check", server_check);
-   
+    app.listen()
 };
 
 var server_check = function(req,res) {
