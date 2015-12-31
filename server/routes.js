@@ -9,7 +9,8 @@ var multer  = require('multer');
 var express  = require('express');
 var fs = require('fs');
 var hocr = require('node-hocr');
-var serveIndex = require('serve-index');
+var Dropbox = require("dropbox");
+var dropboxClient;
 
 module.exports = function(app) {
     app.use(multer(
@@ -23,7 +24,53 @@ module.exports = function(app) {
     app.post("/api/digits", digits);
     app.get("/api/benchmark", benchmark);
     app.get("/server_check", server_check);
+
+
 };
+
+var getDropboxClient = function() {
+
+    if (!dropboxClient) {
+        dropboxClient = new Dropbox.Client({
+            key: "mbwfmlzklm1fi1d",
+            secret: "giazksdcfzo8u9g"
+        });
+        
+        dropboxClient.authDriver(new Dropbox.AuthDriver.NodeServer(8191));
+    }
+
+
+    return dropboxClient;
+}
+
+var authenticateDropboxClient = function(callback) {
+    var dbClient = getDropboxClient();
+    dbClient.authenticate(function(error, client) {
+      if (error) {
+        callback(error, null);
+      } else {
+        callback(null, client);
+      }
+    });
+}
+
+var uploadFileToDropbox = function(image, filename, callback) {
+    authenticateDropboxClient(function(error, client) {
+
+        fs.readFile(image, function(error, data) {
+          // No encoding passed, readFile produces a Buffer instance
+          if (error) {
+             callback(error, null);
+             return;
+          }
+
+          client.writeFile(filename, data, function(error, stat) {
+             callback(error, stat);
+             return;
+          });
+        });
+    });
+}
 
 var server_check = function(req,res) {
 
@@ -178,17 +225,22 @@ function performOcrForImage(image, cropRect, req,res ) {
                             winner = new utils.MeterRead("",0);
                         }
 
-                        utils.copyFileSync(image, __dirname + '/../uploads/meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg');
+                        var filename = 'meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg';
+                        utils.copyFileSync(image, __dirname + '/../uploads/'+filename);
                         res.json(200, meterReadToJson(winner));
-                              
-                        fs.unlink(image, function (err) {
-                            if (err){
-                                callback(err,null)
-                            }
+
+                        uploadFileToDropbox(image,filename,function(error, stats) {
+
+                            console.log(error);
+                            console.log(stats);
+
+                            fs.unlink(image, function (err) {
+                                if (err){
+                                    callback(err,null)
+                                }
+                            });
                         });
                     });
-
-
                 }
             });
         } 
