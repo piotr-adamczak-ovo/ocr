@@ -45,10 +45,14 @@ var getDropboxClient = function() {
 }
 
 var authenticateDropboxClient = function(callback) {
-    console.log("Authenticate dropbox client");
  
     var dbClient = getDropboxClient();
+    console.log("Authenticate dropbox client");
+ 
     dbClient.authenticate(function(error, client) {
+
+      console.log('Auth callback');
+
       console.log(error);
       console.log(client);
  
