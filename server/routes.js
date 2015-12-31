@@ -21,6 +21,7 @@ module.exports = function(app) {
 
     app.post("/api/ocr", process);
     app.post("/api/digits", digits);
+    app.post("/api/upload", upload_photo);
     app.get("/api/benchmark", benchmark);
     app.get("/server_check", server_check);
 };
@@ -112,6 +113,24 @@ var server_check = function(req,res) {
     performOcrForImage(image,cropRect,req,res);
 };
 
+var upload_photo = function(req, res) {
+    console.log('Start uploading: %j', req.files.image.path);
+    var image = req.files.image.path;
+ 
+    var filename = 'meter_photo_'+utils.datetimestamp()+'-upload.jpg';
+    // utils.copyFileSync(image, __dirname + '/../uploads/'+filename);
+    
+    dropbox.uploadFileToDropbox(image,filename,function(error, stats) {
+        res.json(200, "Uploaded");
+
+        fs.unlink(image, function (err) {
+            if (err){
+                callback(err,null)
+            }
+        });
+    });
+}
+
 var process = function(req, res) {
     var image = req.files.file.path;
     performOcrForImage(image, null, req, res);
@@ -179,22 +198,17 @@ function performOcrForImage(image, cropRect, req,res ) {
                         }
 
                         var filename = 'meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg';
-                        utils.copyFileSync(image, __dirname + '/../uploads/'+filename);
+                        // utils.copyFileSync(image, __dirname + '/../uploads/'+filename);
                         
                         res.json(200, meterReadToJson(winner));
 
                         dropbox.uploadFileToDropbox(image,filename,function(error, stats) {
-
-                            console.log(error);
-                            console.log(stats);
-                          
                             fs.unlink(image, function (err) {
                                 if (err){
                                     callback(err,null)
                                 }
                             });
                         });
-
                     });
                 }
             });
