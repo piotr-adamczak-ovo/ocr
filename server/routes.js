@@ -49,7 +49,7 @@ var authenticateDropboxClient = function(callback) {
     var dbClient = getDropboxClient();
     console.log("Authenticate dropbox client");
  
-    dbClient.authenticate(function(error, client) {
+    dbClient.authenticate({interactive: false},function(error, client) {
 
       console.log('Auth callback');
 
