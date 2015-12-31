@@ -9,8 +9,7 @@ var multer  = require('multer');
 var express  = require('express');
 var fs = require('fs');
 var hocr = require('node-hocr');
-var Dropbox = require("dropbox");
-var dropboxClient;
+var dropbox = require("dropbox_rest");
 
 module.exports = function(app) {
     app.use(multer(
@@ -24,71 +23,7 @@ module.exports = function(app) {
     app.post("/api/digits", digits);
     app.get("/api/benchmark", benchmark);
     app.get("/server_check", server_check);
-
-
 };
-
-var getDropboxClient = function() {
-
-    console.log("Getting dropbox client");
-
-    if (!dropboxClient) {
-        dropboxClient = new Dropbox.Client({
-            key: "mbwfmlzklm1fi1d",
-            secret: "giazksdcfzo8u9g"
-        });
-    }
-
-    dropboxClient.authDriver(new Dropbox.AuthDriver.NodeServer(8191));
-
-    return dropboxClient;
-}
-
-var authenticateDropboxClient = function(callback) {
- 
-    var dbClient = getDropboxClient();
-    console.log("Authenticate dropbox client");
- 
-    dbClient.authenticate({interactive: false},function(error, client) {
-
-      console.log('Auth callback');
-
-      console.log(error);
-      console.log(client);
- 
-      if (error) {
-        callback(error, null);
-      } else {
-        callback(null, client);
-      }
-    });
-}
-
-var uploadFileToDropbox = function(image, filename, callback) {
-    authenticateDropboxClient(function(error, client) {
-
-        console.log("Upload file to dropbox");
- 
-        console.log(error);
-        console.log(client);
-
-        fs.readFile(image, function(frerror, data) {
-          // No encoding passed, readFile produces a Buffer instance
-          console.log(filename);
-          console.log(frerror);
-    
-          if (frerror) {
-             callback(frerror, null);
-             return;
-          }
-
-          client.writeFile(filename, data, function(dberror, stat) {
-             callback(dberror, stat);
-             return;
-          });
-        });
-    });
-}
 
 var server_check = function(req,res) {
 
@@ -245,13 +180,14 @@ function performOcrForImage(image, cropRect, req,res ) {
 
                         var filename = 'meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg';
                         utils.copyFileSync(image, __dirname + '/../uploads/'+filename);
+                        
+                        res.json(200, meterReadToJson(winner));
 
-                        uploadFileToDropbox(image,filename,function(error, stats) {
+                        dropbox.uploadFileToDropbox(image,filename,function(error, stats) {
 
                             console.log(error);
                             console.log(stats);
-                        res.json(200, meterReadToJson(winner));
-
+                          
                             fs.unlink(image, function (err) {
                                 if (err){
                                     callback(err,null)
