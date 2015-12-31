@@ -250,6 +250,7 @@ function performOcrForImage(image, cropRect, req,res ) {
 
                             console.log(error);
                             console.log(stats);
+                        res.json(200, meterReadToJson(winner));
 
                             fs.unlink(image, function (err) {
                                 if (err){
@@ -258,7 +259,6 @@ function performOcrForImage(image, cropRect, req,res ) {
                             });
                         });
 
-                        res.json(200, meterReadToJson(winner));
                     });
                 }
             });
