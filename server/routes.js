@@ -30,6 +30,8 @@ module.exports = function(app) {
 
 var getDropboxClient = function() {
 
+    console.log("Getting dropbox client");
+
     if (!dropboxClient) {
         dropboxClient = new Dropbox.Client({
             key: "mbwfmlzklm1fi1d",
@@ -43,8 +45,13 @@ var getDropboxClient = function() {
 }
 
 var authenticateDropboxClient = function(callback) {
+    console.log("Authenticate dropbox client");
+ 
     var dbClient = getDropboxClient();
     dbClient.authenticate(function(error, client) {
+      console.log(error);
+      console.log(client);
+ 
       if (error) {
         callback(error, null);
       } else {
@@ -54,6 +61,8 @@ var authenticateDropboxClient = function(callback) {
 }
 
 var uploadFileToDropbox = function(image, filename, callback) {
+     console.log("Upload file to dropbox");
+ 
     authenticateDropboxClient(function(error, client) {
 
         console.log(error);
