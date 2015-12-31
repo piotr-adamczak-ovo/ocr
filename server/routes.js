@@ -61,15 +61,18 @@ var authenticateDropboxClient = function(callback) {
 }
 
 var uploadFileToDropbox = function(image, filename, callback) {
-     console.log("Upload file to dropbox");
- 
     authenticateDropboxClient(function(error, client) {
 
+        console.log("Upload file to dropbox");
+ 
         console.log(error);
         console.log(client);
 
         fs.readFile(image, function(frerror, data) {
           // No encoding passed, readFile produces a Buffer instance
+          console.log(filename);
+          console.log(frerror);
+    
           if (frerror) {
              callback(frerror, null);
              return;
