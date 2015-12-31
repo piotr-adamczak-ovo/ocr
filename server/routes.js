@@ -38,7 +38,7 @@ var getDropboxClient = function() {
     }
 
     dropboxClient.authDriver(new Dropbox.AuthDriver.NodeServer(8191));
-    
+
     return dropboxClient;
 }
 
@@ -229,7 +229,6 @@ function performOcrForImage(image, cropRect, req,res ) {
 
                         var filename = 'meter_photo_'+utils.datetimestamp()+'-original-'+winner.word+'.jpg';
                         utils.copyFileSync(image, __dirname + '/../uploads/'+filename);
-                        res.json(200, meterReadToJson(winner));
 
                         uploadFileToDropbox(image,filename,function(error, stats) {
 
@@ -242,6 +241,8 @@ function performOcrForImage(image, cropRect, req,res ) {
                                 }
                             });
                         });
+
+                        res.json(200, meterReadToJson(winner));
                     });
                 }
             });
