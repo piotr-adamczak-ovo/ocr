@@ -14,7 +14,7 @@ var dropbox = require("dropbox_rest");
 module.exports = function(app) {
     app.use(multer(
         {
-            dest: './.tmp/',
+            dest: '/tmp/',
             inMemory: false
         }
     ));
