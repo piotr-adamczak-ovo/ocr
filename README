@@ -1,4 +1,12 @@
 OCR meter read recognizer with Tesseract
 
-heroku buildpacks:set heroku/nodejs
-heroku buildpacks:add https://github.com/matteotiziano/heroku-buildpack-tesseract
+sudo apt-get install nodejs-legacy
+sudo apt-get install tesseract-ocr
+sudo apt-get install imagemagick
+
+cd node_modules/lwip/
+node-gyp rebuild
+
+export TESSDATA_PREFIX=/home/ubuntu/ocr/node_modules/node-tesseract
+
+npm start
