@@ -22,7 +22,7 @@ module.exports = function(app) {
     app.post("/api/ocr", process);
     app.post("/api/digits", digits);
     app.post("/api/upload", upload_photo);
-    app.get("/api/benchmark", benchmark);
+    // app.get("/api/benchmark", benchmark);
     app.get("/server_check", server_check);
 };
 
@@ -154,7 +154,9 @@ function performOcrForImage(image, cropRect, req,res ) {
         for (var index = 0; index < preprocessedImages.length; index++) {
 
             var stepImage = preprocessedImages[index];
-
+            console.log(stepImage);
+            console.log(stepImage.path);
+            
             performOCR(stepImage.path, stepImage.isLcd, function(err, text) {
 
                 ocrDone++;
